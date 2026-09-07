@@ -1,0 +1,13 @@
+US9 :
+
+On veut son numéro de série USB Serial / UID
+Pour cela on prend le .zip
+
+Utilisation de Registry Explorer (logiciel) pour le dump
+On sélectionne le fichier SYSTEM
+Ensuite on va dans l'arborescence 
+
+
+SYSTEM -> ControlSet001 -> Enum -> USBSTOR
+
+Dans la colonne Serial Number on retrouve donc la valeur "4C530000281008116284&0"
