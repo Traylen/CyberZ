@@ -1,0 +1,36 @@
+Nous avons travaillé sur les hives de registre extraits du dump (SYSTEM et NTUSER.DAT), en utilisant le logiciel Registry Explorer d'Eric Zimmerman. Le principe est simple : Windows enregistre automatiquement dans sa base de registre chaque connexion de périphérique USB, avec des horodatages précis. Il suffit donc de savoir où chercher.
+
+
+Nous sommes repartis de la clé du périphérique déjà identifié en US9 :
+
+ControlSet001\Enum\USBSTOR\Disk&Ven_SanDisk&Prod_Cruzer_Blade&Rev_1.00\4C530000281008116284&0
+
+En dépliant le sous-dossier "Properties" de cette clé, puis le GUID standard de Windows dédié aux propriétés de connexion USB ({83da6326-97a6-4088-9453-a1923f573b29}), on trouve plusieurs sous-clés numérotées contenant chacune un horodatage précis : la sous-clé 0064 donne la date de première installation du périphérique sur ce poste, la 0065 la date de dernière connexion, et la 0066 la date de dernier débranchement.
+
+Les valeurs relevées sont les suivantes : 0064 et 0065 affichent toutes les deux 03/02/2020 12:12:32, et 0066 affiche 03/02/2020 12:44:21.
+
+Le fait que la première installation et la dernière connexion soient identiques nous apprend quelque chose d'important : la clé USB n'a été branchée qu'une seule fois sur cette machine. Elle est restée connectée environ 32 minutes, entre 12h12 et 12h44.
+
+Pour fiabiliser ce résultat, nous avons chargé un deuxième hive, NTUSER.DAT, qui correspond au profil de l'utilisateur. Dans la clé Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2 on retrouve la liste des volumes montés par cet utilisateur. Une seule entrée est datée du 3 février 2020, le GUID {635b1205-467e-11ea-ba75-000c295e7ac0}, toutes les autres datant de fin janvier. Sa date de dernière écriture est 03/02/2020 12:44:21, c'est-à-dire exactement la même seconde que le débranchement relevé dans le hive SYSTEM. Cette correspondance entre deux sources indépendantes confirme qu'il s'agit bien de notre clé USB.
+
+La clé parente MountPoints2 porte quant à elle la date 03/02/2020 12:13:58, ce qui correspond au moment où le volume a été monté dans la session de l'utilisateur, soit environ une minute et demie après le branchement physique. Cet élément est important car il rattache l'utilisation de la clé à un compte utilisateur précis, et pas seulement à la machine.
+
+Enfin, sous ce GUID, on trouve les sous-clés shell > Autoplay > DropTarget, également datées du 3 février. Elles indiquent que l'utilisateur n'a pas simplement branché la clé : il a interagi avec elle via l'Explorateur Windows, l'AutoPlay s'est déclenché et le volume a servi de cible de glisser-déposer.
+
+
+Toujours dans NTUSER.DAT, la clé Explorer\RecentDocs conserve la liste des derniers documents ouverts. Trois éléments y sont particulièrement parlants.
+Le fichier Nice.xlsx a été ouvert le 03/02/2020 à 12:41:53, soit en plein dans la fenêtre de branchement, moins de trois minutes avant le retrait de la clé.
+
+Un dossier nommé NecessaryFiles-ForUSB apparaît dans la liste. Son horodatage exact n'est pas directement lisible dans le registre, mais sa position dans l'ordre MRU (liste des éléments les plus récemment ouverts) le place après Nice.xlsx et avant les traces d'acquisition forensique, donc très probablement entre 12h41 et 12h44. Son nom se passe de commentaire.
+
+D'autres fichiers sensibles figurent également dans cette liste, notamment PasW0RDs.txt, Project-1.xlsx et le dossier Projects, qui donnent une idée du type de données visées.
+
+
+Voici donc la chronologique qu'on a relevé :
+- 03/02/2020 11:47:05 – Ouverture de MyTasks.csv.txt (NTUSER.DAT\RecentDocs, avant branchement, contexte)
+- 03/02/2020 12:12:32 – Connexion physique de la clé USB SanDisk (SYSTEM\USBSTOR, valeurs 0064/0065)
+- 03/02/2020 12:13:58 – Montage du volume dans la session utilisateur (NTUSER.DAT\MountPoints2)
+- 03/02/2020 12:13-12:44 – Interaction Explorateur / AutoPlay / glisser-déposer (MountPoints2\{635b1205-...}\shell\Autoplay\DropTarget)
+- 03/02/2020 12:41:53 – Ouverture de Nice.xlsx pendant le branchement (NTUSER.DAT\RecentDocs\.xlsx)
+- 03/02/2020 ~12:42-12:44 – Accès au dossier NecessaryFiles-ForUSB (NTUSER.DAT\RecentDocs, déduit de l'ordre MRU)
+- 03/02/2020 12:44:21 – Débranchement de la clé USB (SYSTEM valeur 0066, confirmé à la même seconde par NTUSER.DAT\MountPoints2)
