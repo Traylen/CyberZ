@@ -1,0 +1,13 @@
+Pour déterminer les changements du système et comportement du malware lors de l'execution, nous allons utiliser Procmon.
+On doit d'abord installer Procmon depuis notre VM.
+Il faut absolument que la VM soit en host-only pour pas que le virus se propage sur le PC (couper le réseau aide aussi)
+On crée une snapshot de l'état original
+Puis on lance la capture Procmon, on vide les captures actuelles avec CTRL+X ,exécute le malware, on attend 2 minutes puis on observe.
+CTRL + E pour arrêter la capture
+Et on trouve le malware sur le gestionnaire des taches.
+Sur Procmon File -> Save -> All events (en format CSV)
+
+
+Et en récupérant ce fichier CSV on trouve comme changements :
+Le virus est composé de deux fichiers exécutables, Res.exe et Env.exe. 
+Le malware s'installe via Res.exe, qui crée un dossier C:\WindSyst, y copie tous les fichiers du programme ainsi que les composants d'affichage nécessaires, puis inscrit deux entrées dans le registre Windows pour se relancer automatiquement à chaque démarrage de session. Une fois cette installation terminée, Res.exe reste actif en arrière-plan sans faire grand-chose d'autre. Env.exe, le second composant, plante systématiquement quelques secondes après son lancement quand il est exécuté depuis le dossier d'origine, à cause d'un fichier d'affichage manquant à cet endroit précis, alors qu'il charge bien au préalable toutes les bibliothèques nécessaires pour se connecter à Internet. Même en donnant à la machine un accès Internet réel, aucune connexion n'a pu être observée, simplement parce qu'Env.exe n'est jamais parvenu à terminer son démarrage dans les tests réalisés. Aucune connexion réseau et aucune activité suspecte supplémentaire n'ont donc été constatées au-delà de l'installation et de la mise en place de cette persistance.
