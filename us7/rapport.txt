@@ -1,0 +1,29 @@
+Objectif : réaliser une image forensique du disque de la VM pour analyser fichiers, persistance et traces.
+
+Acquisition : 
+Nous utilisons FTK Imager sur le PC hôte (pas dans la VM), VM éteinte. Le disque est un .vdi, format que FTK Imager ne lit pas : il faut le convertir. VBoxManage showmediuminfo révèle un instantané (Child UUIDs: bb421841…) — l'état courant est dans ce fichier enfant. Nous clonons donc cet UUID en VMDK (format plus léger que le RAW, qui aurait exigé 80 Go) :
+
+VBoxManage clonemedium disk bb421841-9bd7-4f1e-b4f5-4f437a839a8b "windaube2.vmdk" --format VMDK
+
+
+Déchiffrement BitLocker : 
+Dans FTK Imager, la partition principale est illisible : la signature -FVE-FS- indique un chiffrement BitLocker (activé par défaut par Windows 11). Nous le levons dans la VM avec manage-bde -off C:, puis reclonons sur l'état déchiffré (windaube2-clair.vmdk). Note : en réel on garderait l'image chiffrée et on la déchiffrerait à l'analyse ; ici, sur une VM de labo, la levée en amont est acceptable.
+
+
+Intégrité: 
+Hash de l'image calculé avec certutil -hashfile … SHA256, noté avec date et heure.
+Fichier    : windaube2-clair.vmdk
+SHA256     : 9183410426ea97973dd08474f2076aaeeb2e8f078ed2b76f5b47a635955d37f9
+
+
+Analyse avec Autopsy : 
+L'image est chargée dans Autopsy (modules Recent Activity, Hash Lookup, Extension Mismatch, Keyword Search). L'artefact Run Programs identifie deux exécutables suspects :
+
+C:\Users\admin\Downloads\Malware\VIRUS\Env.exe — exécuté le 08/09/2026 12:38:49
+C:\Users\admin\Downloads\Malware\VIRUS\Res.exe — exécuté le 09/09/2026 10:07:34
+
+Recent Documents confirme le parcours (ouverture du ZIP puis des dossiers Malware/VIRUS), et la corbeille contient les archives sources supprimées. Le hash de chaque binaire est relevé via File Metadata (réutilisé en US2).
+
+
+Résultat: 
+Les trois critères sont remplis : image bit-à-bit (VBoxManage + FTK Imager), outils documentés (VBoxManage, FTK Imager, Autopsy, certutil), fichiers suspects identifiés (Env.exe, Res.exe).
