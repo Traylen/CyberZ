@@ -1,5 +1,10 @@
 ## US2: Vérification de la reconnaissance
 
+### Outils utilisés
+
+Virus Total: score 47/100
+MalwareBazaar
+
 ### Hash calculé
 
 hash: a1af8eeaa7fda7ced591a72c572a12c2298ddb763defaa36ce5b17be1411c2be
@@ -15,9 +20,8 @@ trojan.keylogger/zbxji
 Catégories d'attaques: - trojan, - adware, - spyware
 Label: keylogger
 
-Ce que fait le malware: reprend les inputs utilisateur
-
 Proprietes:
+Verdict: Nouveau
 MD5:954f7f91688a0d4eb5a60692bd27f1e3
 SHA-1:1d9e88ef0ab9003b4dc8f34cf0341105ac3cdb7e
 SHA-256:a1af8eeaa7fda7ced591a72c572a12c2298ddb763defaa36ce5b17be1411c2be
