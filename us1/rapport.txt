@@ -1,0 +1,12 @@
+Nous utilisons le logiciel Oracle VirtualBox pour créer notre Machine Virtuelle, ainsi qu'un ISO Windows 11 car nous sommes déjà opérationnel sur cette OS (nous le connaissons)
+
+Dans les paramètres de la VM (Général -> Features), nous avons activé en Bidirectionnel le "Shared Clipboard" et le "Drag-and-drop" pour faciliter les données qu'on passe du PC à la VM sans retaper le texte ou le télécharger directement sur la VM
+
+Concernant le réseau, nous procédons en deux temps.
+Pendant la préparation de la VM, il est en mode NAT pour disposer d'Internet. Aucun malware n'est présent à ce stade, il n'y a donc aucun risque. Une fois l'environnement prêt, nous prenons un instantané pour revenir en arrière au cas où.
+
+Pour l'analyse, la VM est éteinte et basculée en mode Réseau interne. La règle est simple : le malware n'est jamais présent sur la VM tant qu'elle a un accès réseau.
+
+Le mode Réseau interne confine le trafic aux seules VM partageant le même nom de réseau. La nôtre étant seule, aucun échange n'est possible, et VirtualBox ne crée aucune interface sur l'hôte. Nous avons aussi vérifié que les adaptateurs 2, 3 et 4 sont désactivés.
+
+Nous avons écarté le NAT pour cette phase, car il laisse au malware un accès Internet sortant complet vers son serveur de commande. Le mode Réseau privé hôte crée quant à lui une interface sur l'hôte, que la VM peut atteindre directement. L'absence de connexion pendant l'analyse est donc un choix volontaire et non une contrainte : les tentatives de communication restent visibles via une capture Wireshark locale, qui fournit les domaines et IP contactés.
